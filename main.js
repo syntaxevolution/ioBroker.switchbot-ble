@@ -4,6 +4,29 @@ const utils = require('@iobroker/adapter-core');
 const helper = require('./lib/adapterHelper');
 const objects = require('./lib/adapterObjects');
 const Queue = require('./lib/adapterQueue');
+const crypto = require('crypto');
+
+function buildLockProCommand(action, keyId, encKeyHex) {
+    const actionMap = {
+        lock: 0x01,
+        unlock: 0x02,
+        unlatch: 0x03
+    };
+
+    if (!actionMap[action]) throw new Error('Invalid Lock Pro action');
+
+    const command = Buffer.from([0x57, 0x01, 0x00, actionMap[action]]);
+    const encKey = Buffer.from(encKeyHex, 'hex');
+    const encrypted = encryptAES128ECB(command, encKey);
+
+    return Buffer.concat([Buffer.from([0x57, 0x01, parseInt(keyId, 16)]), encrypted]);
+}
+
+function encryptAES128ECB(data, key) {
+    const cipher = crypto.createCipheriv('aes-128-ecb', key, null);
+    cipher.setAutoPadding(true);
+    return Buffer.concat([cipher.update(data), cipher.final()]);
+}
 
 class SwitchbotBle extends utils.Adapter {
     constructor(options) {
@@ -122,7 +145,13 @@ class SwitchbotBle extends utils.Adapter {
             const stateName = helper.getStateNameById(id);
             const macAddress = helper.getDeviceAddressById(id);
             const channelName = helper.getChannelNameById(id);
-            if (channelName === 'control') {
+            if (channelName === 'control' && stateName === 'lockProCommand') {
+                const keyId = this.config.keyId || '01';
+                const encKey = this.config.encKey || '00112233445566778899AABBCCDDEEFF';
+                const payload = buildLockProCommand(state.val, keyId, encKey);
+                this.log.info(`[Lock Pro] Sending command '${state.val}' to ${macAddress}`);
+                this.switchbot._sendCommand(macAddress, payload); // Or use your BLE sending logic
+            }else if (channelName === 'control') {
                 if (state.ack) {
                     return;
                 }

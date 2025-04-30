@@ -95,7 +95,9 @@
         "pressDevicesWait": "",
         "waitingTimeRetries": "",
         "maxRetriesDeviceAction": "",
-        "hciDeviceId": "0"
+        "hciDeviceId": "0",
+        "keyId": "",
+        "encKey": ""
     },
     "objects": [],
     "instanceObjects": [
