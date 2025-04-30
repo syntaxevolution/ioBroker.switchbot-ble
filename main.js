@@ -342,6 +342,7 @@ class SwitchbotBle extends utils.Adapter {
         this.switchbot.startScan().then(() => {
             this.setIsBusy(true);
             this.switchbot.onadvertisement = (data) => {
+                this.log.info(`[onadvertisement] Got device: ${JSON.stringify(data)}`);
                 if (!Object.keys(this.switchbotDevice).includes(data.address)) {
                     (async () => {
                         await this.createBotObjects(data);
