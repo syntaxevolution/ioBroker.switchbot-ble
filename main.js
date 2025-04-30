@@ -338,6 +338,7 @@ class SwitchbotBle extends utils.Adapter {
     }
 
     async scanDevices() {
+        this.log.info('[scanDevices] Started scanning for BLE devices...');
         this.switchbot.startScan().then(() => {
             this.setIsBusy(true);
             this.switchbot.onadvertisement = (data) => {
